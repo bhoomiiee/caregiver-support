@@ -12,6 +12,11 @@ const { scheduleWeeklyEvaluation } = require('./services/scheduler');
 const app = express();
 
 app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'https://caregiver-support-rouge.vercel.app',
+    /\.vercel\.app$/,
+  ],
   exposedHeaders: ['X-Session-Id', 'X-Transcript'],
 }));
 app.use(express.json());
