@@ -90,8 +90,9 @@ router.post('/interact', authenticate, requireRole('caregiver'), upload.single('
 
     conversationHistory.push({ role: 'user', content: userText });
 
-    // 4. Generate AI response
-    const aiText = await generateResponse(conversationHistory, emotionAnalysis, req.user.preferred_language || 'en');
+    // 4. Generate AI response — use language from request or profile
+    const lang = req.body.language || req.user.preferred_language || 'en';
+    const aiText = await generateResponse(conversationHistory, emotionAnalysis, lang);
 
     // 5. TTS
     const audioBuffer = await textToSpeech(aiText);

@@ -112,6 +112,7 @@ export default function CompanionPage() {
       const formData = new FormData();
       formData.append('audio', blob, 'recording.webm');
       if (sessionId) formData.append('sessionId', sessionId);
+      formData.append('language', language);
 
       const response = await api.post('/voice/interact', formData, { responseType: 'arraybuffer' });
       const contentType = String(response.headers['content-type'] || '');
