@@ -3,6 +3,7 @@ const multer = require('multer');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { transcribeAudio, generateResponse, analyzeEmotion, textToSpeech } = require('../services/aiService');
 const { getCurrentWeekNumber, updateWeeklyBurnout } = require('../services/burnoutEngine');
+const { detectCrisis, handleCrisis } = require('../services/crisisDetection');
 const supabase = require('../lib/supabase');
 
 const router = express.Router();
@@ -31,6 +32,13 @@ router.post('/interact', authenticate, requireRole('caregiver'), upload.single('
 
     // 2. Analyze emotion
     const emotionAnalysis = await analyzeEmotion(userText);
+
+    // 2b. Crisis detection — check for self-harm/suicidal keywords
+    if (detectCrisis(userText)) {
+      console.log(`[Crisis] Detected crisis keywords for user ${req.user.name}`);
+      // Auto-escalate and notify admin in background
+      handleCrisis(req.user).catch(console.error);
+    }
 
     // If psychiatrist is active, relay message to them and wait for their response
     if (psychiatristActive) {
@@ -124,18 +132,12 @@ router.post('/interact', authenticate, requireRole('caregiver'), upload.single('
     // 7. Update burnout in background
     updateBurnoutFromSession(req.user, emotionAnalysis).catch(console.error);
 
-    // 8. Respond
-    if (!audioBuffer) {
-      return res.json({ fallbackText: aiText, sessionId: savedSessionId, useBrowserTTS: true });
-    }
-
-    // Send audio with transcript embedded in a multipart-like approach
-    // Use headers for metadata — also set Access-Control-Expose-Headers
-    res.set('Content-Type', 'audio/mpeg');
-    res.set('Access-Control-Expose-Headers', 'X-Session-Id, X-Transcript');
-    res.set('X-Session-Id', savedSessionId || '');
-    res.set('X-Transcript', encodeURIComponent(aiText));
-    res.send(audioBuffer);
+    // 8. Respond — always return JSON with text, let frontend handle TTS
+    return res.json({
+      text: aiText,
+      sessionId: savedSessionId,
+      language: lang,
+    });
   } catch (err) {
     console.error('Voice interact error:', err);
     res.status(500).json({ error: 'Failed to process voice interaction' });

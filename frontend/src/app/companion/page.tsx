@@ -114,46 +114,53 @@ export default function CompanionPage() {
       if (sessionId) formData.append('sessionId', sessionId);
       formData.append('language', language);
 
-      const response = await api.post('/voice/interact', formData, { responseType: 'arraybuffer' });
-      const contentType = String(response.headers['content-type'] || '');
+      const response = await api.post('/voice/interact', formData);
+      const { text, sessionId: newSid } = response.data;
 
-      if (contentType.includes('application/json')) {
-        const json = JSON.parse(new TextDecoder().decode(response.data));
-        if (json.sessionId) setSessionId(json.sessionId);
-        if (json.waitingForPsychiatrist) { setStatus('idle'); return; }
-        if (json.fallbackText) {
-          setLastMessage(json.fallbackText);
-          speak(json.fallbackText, language);
-        } else {
-          setStatus('idle');
-        }
-        return;
+      if (newSid) setSessionId(newSid);
+      if (text) {
+        setLastMessage(text);
+        await playElevenLabs(text);
+      } else {
+        setStatus('idle');
       }
-
-      // Audio response from server TTS
-      const sid = response.headers['x-session-id'];
-      const transcript = decodeURIComponent(response.headers['x-transcript'] || '');
-      if (sid) setSessionId(String(sid));
-      if (transcript) setLastMessage(transcript);
-
-      const audioBlob = new Blob([response.data], { type: 'audio/mpeg' });
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
-      setStatus('speaking');
-      audio.onended = () => { URL.revokeObjectURL(audioUrl); setStatus('idle'); };
-      audio.onerror = () => {
-        URL.revokeObjectURL(audioUrl);
-        // Server audio failed — fall back to browser speech
-        if (transcript) speak(transcript, language);
-        else setStatus('idle');
-      };
-      audio.play().catch(() => {
-        if (transcript) speak(transcript, language);
-        else setStatus('idle');
-      });
     } catch (err: any) {
       setErrorMsg(err.response?.data?.error || 'Something went wrong. Please try again.');
       setStatus('idle');
+    }
+  }
+
+  async function playElevenLabs(text: string) {
+    try {
+      setStatus('speaking');
+      const res = await fetch(
+        'https://api.elevenlabs.io/v1/text-to-speech/EXAVITQu4vr4xnSDxMaL',
+        {
+          method: 'POST',
+          headers: {
+            'xi-api-key': process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY || '',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text,
+            model_id: 'eleven_multilingual_v2',
+            voice_settings: { stability: 0.5, similarity_boost: 0.75 },
+          }),
+        }
+      );
+
+      if (!res.ok) throw new Error('ElevenLabs failed');
+
+      const arrayBuffer = await res.arrayBuffer();
+      const audioBlob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      audio.onended = () => { URL.revokeObjectURL(audioUrl); setStatus('idle'); };
+      audio.onerror = () => { setStatus('idle'); };
+      await audio.play();
+    } catch {
+      // Fallback to browser speech
+      speak(text, language);
     }
   }
 
