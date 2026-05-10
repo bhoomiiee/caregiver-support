@@ -6,6 +6,7 @@ import { useStore } from '@/lib/store';
 
 interface CaregiverRow {
   id: string; name: string; is_escalated: boolean;
+  crisis_escalated?: boolean; escalation_reason?: string;
   assigned_psychiatrist: string | null; week_joined: string;
   latestBurnout: { weekNumber: number; score: number; riskLevel: string } | null;
 }
@@ -175,9 +176,26 @@ export default function AdminPage() {
                         {u.latestBurnout ? `${u.latestBurnout.score}/100` : '—'}
                       </td>
                       <td className="px-5 py-4">
-                        {u.is_escalated
-                          ? <span className="text-xs text-purple-600 font-medium flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-purple-500 inline-block" />Escalated</span>
-                          : <span className="text-xs text-emerald-600 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />Active</span>}
+                        {u.is_escalated ? (
+                          <div className="flex flex-col gap-0.5">
+                            {u.crisis_escalated ? (
+                              <span className="text-xs text-red-600 font-bold flex items-center gap-1">
+                                🚨 Crisis Escalated
+                              </span>
+                            ) : (
+                              <span className="text-xs text-purple-600 font-medium flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-purple-500 inline-block" />Escalated
+                              </span>
+                            )}
+                            {u.escalation_reason === 'crisis_voice_conversation' && (
+                              <span className="text-xs text-red-400">via voice conversation</span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-emerald-600 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />Active
+                          </span>
+                        )}
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
