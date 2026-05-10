@@ -44,7 +44,10 @@ A voice-first AI companion that feels like talking to a trusted friend — not a
 Voice-only interaction — no typing required. The caregiver speaks, the AI responds with warmth and empathy in real time. Supports 16 languages including Hindi, Kannada, Tamil, Telugu, and more.
 
 ### 📋 Weekly Emotional Check-ins
-Every week, the AI asks 5 rotating emotional wellness questions. Responses are analyzed for sentiment and emotional health. 4 different question sets rotate weekly to avoid repetition.
+Every week, the AI asks 5 emotional wellness questions. Responses are analyzed for sentiment and emotional health. Questions focus on stress, mental exhaustion, sleep, support, and overall mood.
+
+### 🔐 Admin Account Management
+Admins can create psychiatrist and admin accounts directly from the admin portal — no manual database access needed. The Create Account tab allows setting name, email, password, and role.
 
 ### 📊 Burnout Score Analysis
 A hidden burnout score (0–100) is calculated from:
@@ -244,9 +247,17 @@ NEXT_PUBLIC_ELEVENLABS_API_KEY=
 
 ## 📸 Screenshots
 
-| Login Page | Voice Companion | Admin Dashboard |
-|---|---|---|
-| Illustrated lavender background with centered login card | Hold-to-speak orb with real-time emotion response | Burnout scores, risk levels, crisis escalation flags |
+### Login Page
+![Login Page](docs/screenshots/login.png)
+*Clean lavender design with Poppins font — centered card over illustrated background*
+
+### Voice Companion
+![Voice Companion](docs/screenshots/companion.png)
+*Hold-to-speak orb with language selector — caregiver speaks naturally, AI responds with voice and text*
+
+### Admin Dashboard
+![Admin Dashboard](docs/screenshots/admin.png)
+*Real-time burnout scores, risk levels, escalation status, and psychiatrist assignment — admins can also create psychiatrist accounts from the Create Account tab*
 
 ---
 
