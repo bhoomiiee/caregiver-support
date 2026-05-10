@@ -7,7 +7,9 @@ import { useStore } from '@/lib/store';
 interface CaregiverRow {
   id: string; name: string; is_escalated: boolean;
   crisis_escalated?: boolean; escalation_reason?: string;
-  assigned_psychiatrist: string | null; week_joined: string;
+  assigned_psychiatrist: string | null;
+  psychiatrist?: { name: string } | null;
+  week_joined: string;
   latestBurnout: { weekNumber: number; score: number; riskLevel: string } | null;
 }
 interface Psychiatrist { id: string; name: string; }
@@ -190,6 +192,11 @@ export default function AdminPage() {
                             {u.escalation_reason === 'crisis_voice_conversation' && (
                               <span className="text-xs text-red-400">via voice conversation</span>
                             )}
+                            {u.psychiatrist?.name && (
+                              <span className="text-xs text-lavender-400">
+                                Dr. {u.psychiatrist.name}
+                              </span>
+                            )}
                           </div>
                         ) : (
                           <span className="text-xs text-emerald-600 flex items-center gap-1">
@@ -202,7 +209,12 @@ export default function AdminPage() {
                           {!u.is_escalated
                             ? <button onClick={() => { setEscalateModal(u); setSelectedPsych(''); }} className="text-xs text-lavender-500 hover:text-lavender-700 font-medium transition">Escalate</button>
                             : <button onClick={() => handleDeescalate(u.id)} className="text-xs text-lavender-300 hover:text-lavender-500 transition">Remove</button>}
-                          <button onClick={() => router.push(`/admin/report/${u.id}`)} className="text-xs text-lavender-400 hover:text-lavender-600 transition">Report →</button>
+                          <button onClick={() => router.push(`/admin/report/${u.id}`)}
+                            className={`text-xs transition font-medium ${u.crisis_escalated ? 'text-red-500 hover:text-red-700' : 'text-lavender-400 hover:text-lavender-600'}`}>
+                            {u.is_escalated && u.psychiatrist?.name
+                              ? `Report → ${u.psychiatrist.name}`
+                              : 'Report →'}
+                          </button>
                         </div>
                       </td>
                     </tr>
